@@ -1,0 +1,325 @@
+---
+description: Cursor Rules for Indie Hacker Stack
+globs: 
+alwaysApply: true
+---
+
+# Cursor Rules for Indie Hacker Stack
+
+## Stack Overview
+- **Framework:** SvelteKit (Svelte 5) with TypeScript
+- **Hosting:** Cloudflare Pages
+- **Database:** Supabase (Postgres)
+- **Auth:** Supabase Auth (free, built-in)
+- **Payments:** DodoPay via @dodopayments/sveltekit
+- **Analytics:** Umami (self-hosted)
+
+---
+
+## UX Requirements (MUST FOLLOW)
+
+### Feedback & Notifications
+
+1. **NEVER use `alert()`, `confirm()`, or `prompt()`**
+   - Use toast notifications (Sonner) for transient feedback
+   - Use modals for confirmations that require user decision
+   - Use inline error messages for form validation
+
+2. **Toast Notifications (install `svelte-sonner`)**
+   - Success: Green toast, auto-dismiss after 3s
+   - Error: Red toast, auto-dismiss after 5s
+   - Info: Neutral toast, auto-dismiss after 3s
+   - Loading: Show loading state, then resolve to success/error
+
+3. **Modals for Destructive Actions**
+   - Deleting data, canceling subscriptions, logging out of all devices
+   - Always provide a clear cancel option
+   - Use descriptive action button text (e.g., "Delete Account" not "OK")
+
+4. **Form Validation**
+   - Show inline errors below the input field
+   - Validate on blur for individual fields
+   - Validate on submit for the entire form
+   - Disable submit button while processing
+   - Show loading spinner in button during submission
+
+### Loading States
+
+1. **Always show loading indicators**
+   - Use skeleton loaders for content areas
+   - Use spinner in buttons during form submission
+   - Disable interactive elements while loading
+
+2. **Optimistic Updates**
+   - For non-critical actions, update UI immediately
+   - Revert on error with toast notification
+
+3. **Page Transitions**
+   - Use SvelteKit's built-in navigation loading state
+   - Show progress indicator for slow navigations
+
+### Forms
+
+1. **Use SvelteKit's `enhance` action**
+   - Provides progressive enhancement
+   - Handles loading states automatically
+   - Works without JavaScript
+
+2. **Form Structure**
+   ```svelte
+   <form method="POST" use:enhance={() => {
+     loading = true;
+     return async ({ result, update }) => {
+       loading = false;
+       if (result.type === 'success') {
+         toast.success('Saved successfully');
+       } else if (result.type === 'failure') {
+         toast.error(result.data?.message || 'Something went wrong');
+       }
+       await update();
+     };
+   }}>
+   ```
+
+3. **Button States**
+   - Default: Normal appearance
+   - Loading: Spinner + "Loading..." or action verb + "ing..."
+   - Disabled: Reduced opacity, cursor not-allowed
+   - Success: Brief green state (optional)
+
+### Error Handling
+
+1. **Never show raw error messages to users**
+   - Log full errors to console in development
+   - Show user-friendly messages in UI
+   - Provide actionable next steps when possible
+
+2. **Error Boundaries**
+   - Use SvelteKit's `+error.svelte` for route errors
+   - Provide a way to retry or go back
+
+3. **Network Errors**
+   - "Unable to connect. Please check your internet connection."
+   - Provide retry button
+
+4. **Auth Errors**
+   - "Invalid email or password" (never reveal which is wrong)
+   - "Session expired. Please sign in again."
+
+### Accessibility
+
+1. **Focus Management**
+   - Trap focus in modals
+   - Return focus to trigger element when modal closes
+   - Use `autofocus` on first input in forms
+
+2. **Keyboard Navigation**
+   - All interactive elements must be keyboard accessible
+   - Escape key closes modals
+   - Enter key submits forms
+
+3. **ARIA Labels**
+   - Add aria-label to icon-only buttons
+   - Use aria-live for dynamic content updates
+   - Proper heading hierarchy (h1 > h2 > h3)
+
+4. **Color Contrast**
+   - Minimum 4.5:1 for normal text
+   - Minimum 3:1 for large text and UI components
+
+### Design Patterns
+
+1. **No Emojis in UI**
+   - NEVER use emojis unless explicitly requested by the user
+   - Use Lucide icons via `lucide-svelte` package
+   - Keep the interface professional and minimal
+
+2. **Icons with lucide-svelte**
+   - IMPORTANT: Import icons from specific paths to avoid SSR issues
+   - DO NOT import from main package: `import { Lock } from 'lucide-svelte'` (causes SSR errors)
+   - DO import from specific paths: `import Lock from 'lucide-svelte/icons/lock'`
+   
+   ```svelte
+   <script>
+     // Correct way - import from specific icon paths
+     import Lock from 'lucide-svelte/icons/lock';
+     import CreditCard from 'lucide-svelte/icons/credit-card';
+     import TrendingUp from 'lucide-svelte/icons/trending-up';
+   </script>
+   
+   <Lock size={24} />
+   <CreditCard size={20} class="text-blue-500" />
+   ```
+   
+   - Icon names use kebab-case in path: `ArrowRight` → `lucide-svelte/icons/arrow-right`
+   - Browse icons at https://lucide.dev/icons
+
+3. **Consistent Spacing**
+   - Use CSS variables for spacing
+   - Follow 4px/8px grid system
+
+4. **Typography**
+   - Maximum 2 font families
+   - Clear hierarchy with font weights and sizes
+   - Line height 1.5 for body text
+
+5. **Interactive Elements**
+   - Minimum touch target 44x44px on mobile
+   - Hover states for desktop
+   - Active/pressed states for all clickable elements
+
+### Navigation
+
+1. **Breadcrumbs** for deep navigation
+2. **Back buttons** should use browser history when possible
+3. **Preserve scroll position** on back navigation
+4. **Show current location** in navigation
+
+### Data Display
+
+1. **Empty States**
+   - Friendly message explaining what should be here
+   - Clear call-to-action to create first item
+
+2. **Loading States**
+   - Skeleton loaders matching content layout
+   - Never show blank screens
+
+3. **Error States**
+   - Clear error message
+   - Retry button when applicable
+   - Link to support if persistent
+
+---
+
+## Code Conventions
+
+### File Structure
+```
+src/
+├── lib/
+│   ├── components/     # Reusable UI components
+│   │   ├── ui/         # Base components (Button, Input, Modal)
+│   │   └── [feature]/  # Feature-specific components
+│   ├── utils/          # Utility functions
+│   ├── stores/         # Svelte stores
+│   └── types/          # TypeScript types
+└── routes/
+    └── [route]/
+        ├── +page.svelte
+        ├── +page.server.ts
+        └── +page.ts
+```
+
+### Naming Conventions
+- Components: PascalCase (`Button.svelte`)
+- Files: kebab-case (`user-profile.ts`)
+- Functions: camelCase (`getUserById`)
+- Constants: SCREAMING_SNAKE_CASE (`API_BASE_URL`)
+- CSS classes: kebab-case (`btn-primary`)
+
+### TypeScript
+- Always define types for function parameters and returns
+- Use `interface` for object shapes, `type` for unions/primitives
+- Avoid `any` - use `unknown` if type is truly unknown
+
+### Svelte 5
+- Use `$state()` for reactive state
+- Use `$derived()` for computed values
+- Use `$effect()` for side effects
+- Use `$props()` for component props
+- Prefer `{@render children()}` over `<slot />`
+
+### Server Code
+- All database queries in `+page.server.ts` or `+server.ts`
+- Validate all user input server-side
+- Use `fail()` for returning form errors
+- Use `redirect()` for navigation after actions
+
+### Authentication
+- Always use `safeGetSession()` pattern
+- Check auth in `+page.server.ts` load functions
+- Redirect to `/auth/login` if not authenticated
+- Never trust client-side session data
+
+---
+
+## Component Library (Create as Needed)
+
+### Required Base Components
+- `Button` - with loading, disabled, variants
+- `Input` - with label, error, helper text
+- `Modal` - with focus trap, escape to close
+- `Toast` - via svelte-sonner integration
+- `Skeleton` - loading placeholder
+- `Spinner` - loading indicator
+
+### Example Button Component
+```svelte
+<script lang="ts">
+  import type { Snippet } from 'svelte';
+  
+  interface Props {
+    variant?: 'primary' | 'secondary' | 'ghost';
+    size?: 'sm' | 'md' | 'lg';
+    loading?: boolean;
+    disabled?: boolean;
+    type?: 'button' | 'submit';
+    children: Snippet;
+  }
+  
+  let { 
+    variant = 'primary', 
+    size = 'md', 
+    loading = false,
+    disabled = false,
+    type = 'button',
+    children 
+  }: Props = $props();
+</script>
+
+<button 
+  {type}
+  class="btn btn-{variant} btn-{size}"
+  disabled={disabled || loading}
+>
+  {#if loading}
+    <span class="spinner"></span>
+  {/if}
+  {@render children()}
+</button>
+```
+
+---
+
+## Dependencies to Install
+
+```bash
+# Toast notifications
+npm install svelte-sonner
+
+# Icons (already installed)
+npm install lucide-svelte
+```
+
+---
+
+## Quick Reference
+
+### Do
+- Use toast for feedback
+- Use modals for confirmations
+- Show loading states
+- Handle errors gracefully
+- Use semantic HTML
+- Follow accessibility guidelines
+- Use lucide-svelte icons (import from specific paths)
+
+### Don't
+- Use alert/confirm/prompt
+- Show raw error messages
+- Leave users without feedback
+- Use emojis in UI (unless user explicitly requests)
+- Forget loading states
+- Skip error handling
+- Import lucide icons from main package (causes SSR errors)
