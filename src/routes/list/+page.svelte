@@ -7,11 +7,13 @@
 	import X from 'lucide-svelte/icons/x';
 	import Frown from 'lucide-svelte/icons/frown';
 	import Cloud from 'lucide-svelte/icons/cloud';
+	import CloudUpload from 'lucide-svelte/icons/cloud-upload';
 	import LayoutGrid from 'lucide-svelte/icons/layout-grid';
 	import List from 'lucide-svelte/icons/list';
 	import Twitter from 'lucide-svelte/icons/twitter';
 	import ExternalLink from 'lucide-svelte/icons/external-link';
 	import Search from 'lucide-svelte/icons/search';
+	import Check from 'lucide-svelte/icons/check';
 	import {
 		getEnemiesWithGrievances,
 		addEnemy,
@@ -21,14 +23,21 @@
 		updateEnemyPosition,
 		extractTweetId,
 		cleanTwitterHandle,
+		getAllDataForSync,
+		clearAllData,
 		type LocalEnemyWithGrievances
 	} from '$lib/stores/localEnemies';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let enemies = $state<LocalEnemyWithGrievances[]>([]);
 	let showAddForm = $state(false);
 	let expandedEnemyId = $state<string | null>(null);
 	let addingEnemy = $state(false);
+	let syncing = $state(false);
 	let viewMode = $state<'list' | 'whiteboard'>('list');
 	let searchQuery = $state('');
 
@@ -63,6 +72,55 @@
 
 	function refreshEnemies() {
 		enemies = getEnemiesWithGrievances();
+	}
+
+	async function handleSync() {
+		// If not logged in, redirect to login
+		if (!data.isLoggedIn) {
+			toast.info('Please log in to sync your list');
+			goto('/auth/login');
+			return;
+		}
+
+		// If no enemies to sync, show info
+		if (enemies.length === 0) {
+			toast.info('No enemies to sync');
+			return;
+		}
+
+		syncing = true;
+
+		try {
+			const syncData = getAllDataForSync();
+			
+			const response = await fetch('/api/sync', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(syncData)
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				throw new Error(result.error || 'Failed to sync');
+			}
+
+			// Clear local data after successful sync
+			clearAllData();
+			refreshEnemies();
+
+			toast.success(`Synced ${result.syncedEnemies} enemies and ${result.syncedGrievances} grievances to the cloud!`);
+			
+			// Redirect to dashboard to see synced data
+			goto('/dashboard');
+		} catch (error) {
+			console.error('Sync error:', error);
+			toast.error('Failed to sync data. Please try again.');
+		} finally {
+			syncing = false;
+		}
 	}
 
 	function toggleExpanded(enemyId: string) {
@@ -234,10 +292,19 @@
 					<Plus size={18} />
 					<span class="btn-text">Add to the List</span>
 				</button>
-				<a href="/auth/login" class="btn btn-ghost btn-sync">
-					<Cloud size={16} />
+			<button 
+				class="btn btn-ghost btn-sync"
+				onclick={handleSync}
+				disabled={syncing || enemies.length === 0}
+			>
+				{#if syncing}
+					<span class="spinner-small"></span>
+					<span class="btn-text">Syncing...</span>
+				{:else}
+					<CloudUpload size={16} />
 					<span class="btn-text">Sync</span>
-				</a>
+				{/if}
+			</button>
 			</div>
 		</header>
 
@@ -920,6 +987,7 @@
 		cursor: pointer;
 		text-align: left;
 		gap: 0.75rem;
+		color: var(--text-primary);
 	}
 
 	.enemy-header:hover {
@@ -974,6 +1042,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		color: var(--text-primary);
 	}
 
 	.enemy-nickname {
@@ -1266,6 +1335,22 @@
 	.footer-tagline {
 		color: var(--text-muted);
 		font-size: 0.75rem;
+	}
+
+	/* Spinner */
+	.spinner-small {
+		width: 16px;
+		height: 16px;
+		border: 2px solid currentColor;
+		border-top-color: transparent;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	/* Responsive */

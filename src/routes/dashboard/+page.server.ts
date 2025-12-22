@@ -46,6 +46,8 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const name = formData.get('name')?.toString().trim();
 		const nickname = formData.get('nickname')?.toString().trim() || null;
+		const twitter_handle = formData.get('twitter_handle')?.toString().trim() || null;
+		const tweet_url = formData.get('tweet_url')?.toString().trim() || null;
 
 		if (!name) {
 			return fail(400, { message: 'Name is required', action: 'addEnemy' });
@@ -54,7 +56,9 @@ export const actions: Actions = {
 		const { error } = await locals.supabase.from('enemies').insert({
 			user_id: user.id,
 			name,
-			nickname
+			nickname,
+			twitter_handle,
+			tweet_url
 		});
 
 		if (error) {

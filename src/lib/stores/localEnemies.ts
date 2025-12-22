@@ -134,6 +134,19 @@ export function clearAllData(): void {
 	localStorage.removeItem(GRIEVANCES_KEY);
 }
 
+export function getAllDataForSync(): { enemies: LocalEnemy[]; grievances: LocalGrievance[] } {
+	return {
+		enemies: getStoredEnemies(),
+		grievances: getStoredGrievances()
+	};
+}
+
+export function hasLocalData(): boolean {
+	if (!browser) return false;
+	const enemies = getStoredEnemies();
+	return enemies.length > 0;
+}
+
 // Helper to extract tweet ID from URL
 export function extractTweetId(url: string): string | null {
 	const match = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/);
