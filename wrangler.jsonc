@@ -3,6 +3,10 @@
 	"name": "hatecrm",
 	"compatibility_date": "2024-09-23",
 	"compatibility_flags": ["nodejs_compat"],
-	"pages_build_output_dir": ".svelte-kit/cloudflare"
+	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"vars": {
+		"PUBLIC_SUPABASE_URL": "https://ldievexwvtvdyrbkcive.supabase.co",
+		"PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ftdrsJriYBNLrZ8jacXEGg_Jccf61Xo"
+	}
 }
 
