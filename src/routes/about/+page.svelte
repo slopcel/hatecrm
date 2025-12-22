@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Twitter from 'lucide-svelte/icons/twitter';
-	import Github from 'lucide-svelte/icons/github';
 	import Globe from 'lucide-svelte/icons/globe';
 </script>
 
