@@ -9,8 +9,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		redirect(303, '/auth/login');
 	}
 
+	// Fetch user's subscription status (example)
+	const { data: subscription } = await locals.supabase
+		.from('subscriptions')
+		.select('*')
+		.eq('user_id', user.id)
+		.single();
+
 	return {
-		user
+		user,
+		subscription
 	};
 };
 

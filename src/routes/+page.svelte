@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	// Import icons from specific paths to avoid SSR issues
 	import Lock from 'lucide-svelte/icons/lock';
-	import Database from 'lucide-svelte/icons/database';
+	import CreditCard from 'lucide-svelte/icons/credit-card';
 	import TrendingUp from 'lucide-svelte/icons/trending-up';
 
 	let { data }: { data: PageData } = $props();
@@ -10,7 +10,7 @@
 
 <svelte:head>
 	<title>Indie Hacker Stack | Ship Fast</title>
-	<meta name="description" content="SvelteKit + Supabase - The indie hacker's stack for shipping fast" />
+	<meta name="description" content="SvelteKit + Supabase + DodoPay - The indie hacker's stack for shipping fast" />
 </svelte:head>
 
 <main class="hero">
@@ -38,10 +38,10 @@
 				Ship your SaaS<br />
 				<span class="text-accent">in days, not months</span>
 			</h1>
-		<p class="hero-subtitle animate-in delay-2">
-			The complete stack for building and launching your next project. 
-			SvelteKit and Supabase Auth. Minimal config, maximum speed.
-		</p>
+			<p class="hero-subtitle animate-in delay-2">
+				The complete stack for building and launching your next project. 
+				SvelteKit, Supabase Auth, and DodoPay Payments. Minimal config, maximum speed.
+			</p>
 			<div class="hero-cta animate-in delay-3">
 				{#if data.user}
 					<a href="/dashboard" class="btn btn-primary">Go to Dashboard →</a>
@@ -64,10 +64,10 @@
 
 				<div class="card card-hover animate-in delay-1">
 					<div class="feature-icon">
-						<Database size={24} />
+						<CreditCard size={24} />
 					</div>
-					<h3>Supabase Database</h3>
-					<p>Postgres database with Row Level Security. Real-time subscriptions and auto-generated APIs.</p>
+					<h3>DodoPay Payments</h3>
+					<p>Accept payments globally with ease. Checkout, customer portals, and webhooks ready to go.</p>
 				</div>
 
 				<div class="card card-hover animate-in delay-2">
@@ -98,7 +98,7 @@
 		</section>
 
 		<footer class="footer">
-			<p class="text-muted">Built with SvelteKit and Supabase</p>
+			<p class="text-muted">Built with SvelteKit, Supabase, and DodoPay</p>
 		</footer>
 	</div>
 </main>
