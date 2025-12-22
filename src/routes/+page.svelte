@@ -10,8 +10,51 @@
 
 <svelte:head>
 	<title>HateCRM | Track Your Grievances</title>
-	<meta name="description" content="A CRM for keeping track of people you don't like and why. Organize your grievances." />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="description" content="A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again." />
+	<meta name="keywords" content="CRM, grievances, track enemies, enemy list, grudge tracker, offense tracker" />
+	<link rel="canonical" href="https://hatecrm.com" />
+	
+	<!-- Open Graph -->
+	<meta property="og:site_name" content="HateCRM" />
+	<meta property="og:title" content="HateCRM | Track Your Grievances" />
+	<meta property="og:description" content="A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again." />
+	<meta property="og:image" content="https://hatecrm.com/main-og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://hatecrm.com" />
+	<meta property="og:locale" content="en_US" />
+	
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="@_madiou" />
+	<meta name="twitter:creator" content="@_madiou" />
+	<meta name="twitter:title" content="HateCRM | Track Your Grievances" />
+	<meta name="twitter:description" content="A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again." />
+	<meta name="twitter:image" content="https://hatecrm.com/main-og-image.png" />
+	
+	<!-- Structured Data -->
+	{@html `<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		"name": "HateCRM",
+		"description": "A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again.",
+		"url": "https://hatecrm.com",
+		"applicationCategory": "Productivity",
+		"operatingSystem": "Web",
+		"offers": {
+			"@type": "Offer",
+			"price": "0",
+			"priceCurrency": "USD"
+		},
+		"author": {
+			"@type": "Person",
+			"name": "Madiou",
+			"url": "https://twitter.com/_madiou"
+		}
+	}
+	</script>`}
 </svelte:head>
 
 <main class="hero">

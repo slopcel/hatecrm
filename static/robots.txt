@@ -1,0 +1,7 @@
+# HateCRM Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://hatecrm.com/sitemap.xml
+
