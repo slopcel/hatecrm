@@ -1,94 +1,255 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import { enhance } from '$app/forms';
+	import type { PageData, ActionData } from './$types';
+	import type { EnemyWithGrievances } from '$lib/types/database';
+	import { toast } from 'svelte-sonner';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Trash2 from 'lucide-svelte/icons/trash-2';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ChevronUp from 'lucide-svelte/icons/chevron-up';
+	import X from 'lucide-svelte/icons/x';
+	import Frown from 'lucide-svelte/icons/frown';
 
-	interface DashboardData {
-		user: PageData['user'];
+	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	let showAddForm = $state(false);
+	let expandedEnemyId = $state<string | null>(null);
+	let addingEnemy = $state(false);
+	let addingGrievance = $state(false);
+	let deletingId = $state<string | null>(null);
+
+	function toggleExpanded(enemyId: string) {
+		expandedEnemyId = expandedEnemyId === enemyId ? null : enemyId;
 	}
 
-	let { data }: { data: DashboardData } = $props();
+	$effect(() => {
+		if (form?.success) {
+			if (form.action === 'addEnemy') {
+				toast.success('Added to the list. They earned it.');
+				showAddForm = false;
+			} else if (form.action === 'deleteEnemy') {
+				toast.success('Off the list. Feeling generous?');
+			} else if (form.action === 'addGrievance') {
+				toast.success('Grievance noted. The record grows.');
+			} else if (form.action === 'deleteGrievance') {
+				toast.success('Grievance removed. Going soft?');
+			}
+		} else if (form?.message) {
+			toast.error(form.message);
+		}
+	});
 </script>
 
 <svelte:head>
-	<title>Dashboard | ShipFast</title>
+	<title>Dashboard | HateCRM</title>
 </svelte:head>
 
 <main class="dashboard">
 	<div class="container">
 		<header class="dashboard-header">
 			<div>
-				<h1>Dashboard</h1>
-				<p class="text-secondary">Welcome back, {data.user?.email}</p>
+				<h1>HateCRM</h1>
+				<p class="tagline">Your enemies, organized.</p>
 			</div>
-			<form action="/auth/logout" method="POST">
-				<button type="submit" class="btn btn-ghost">Sign Out</button>
-			</form>
+			<div class="header-actions">
+				<button 
+					class="btn btn-primary" 
+					onclick={() => showAddForm = !showAddForm}
+				>
+					<Plus size={18} />
+					Add to the List
+				</button>
+				<form action="/auth/logout" method="POST">
+					<button type="submit" class="btn btn-ghost">Sign Out</button>
+				</form>
+			</div>
 		</header>
 
-		<div class="dashboard-grid">
-			<!-- User Info Card -->
-			<div class="card">
-				<div class="card-header">
-					<h2>Account</h2>
-				</div>
-				<div class="card-body">
-					<div class="info-row">
-						<span class="label">Email</span>
-						<span class="value">{data.user?.email}</span>
+		<!-- Add Enemy Form -->
+		{#if showAddForm}
+			<div class="add-form-container animate-in">
+				<form 
+					method="POST" 
+					action="?/addEnemy"
+					class="add-form"
+					use:enhance={() => {
+						addingEnemy = true;
+						return async ({ update }) => {
+							addingEnemy = false;
+							await update();
+						};
+					}}
+				>
+					<div class="form-row">
+						<div class="form-group">
+							<label for="name" class="label">Name</label>
+							<input 
+								type="text" 
+								id="name" 
+								name="name" 
+								class="input" 
+								placeholder="Who wronged you?"
+								required
+							/>
+						</div>
+						<div class="form-group">
+							<label for="nickname" class="label">Nickname (optional)</label>
+							<input 
+								type="text" 
+								id="nickname" 
+								name="nickname" 
+								class="input" 
+								placeholder="e.g., 'The Reply-All Guy'"
+							/>
+						</div>
 					</div>
-					<div class="info-row">
-						<span class="label">User ID</span>
-						<code class="value">{data.user?.id.slice(0, 8)}...</code>
+					<div class="form-actions">
+						<button type="button" class="btn btn-ghost" onclick={() => showAddForm = false}>
+							Cancel
+						</button>
+						<button type="submit" class="btn btn-primary" disabled={addingEnemy}>
+							{addingEnemy ? 'Adding...' : 'Add Enemy'}
+						</button>
 					</div>
-					<div class="info-row">
-						<span class="label">Provider</span>
-						<span class="value">{data.user?.app_metadata?.provider ?? 'email'}</span>
-					</div>
-				</div>
+				</form>
 			</div>
+		{/if}
 
-			<!-- Quick Actions Card -->
-			<div class="card">
-				<div class="card-header">
-					<h2>Quick Actions</h2>
-				</div>
-				<div class="card-body">
-					<div class="action-grid">
-						<a href="/" class="action-item">
-							<span>Home</span>
-						</a>
-						<a href="https://supabase.com/dashboard" target="_blank" rel="noopener" class="action-item">
-							<span>Supabase</span>
-						</a>
+		<!-- Enemy List -->
+		<div class="enemy-list">
+			{#if data.enemies.length === 0}
+				<div class="empty-state">
+					<div class="empty-icon">
+						<Frown size={48} />
 					</div>
+					<h2>No enemies yet?</h2>
+					<p>Lucky you. Or maybe you're just in denial.</p>
+					<button class="btn btn-primary" onclick={() => showAddForm = true}>
+						<Plus size={18} />
+						Add Your First Enemy
+					</button>
 				</div>
-			</div>
+			{:else}
+				{#each data.enemies as enemy (enemy.id)}
+					{@const isExpanded = expandedEnemyId === enemy.id}
+					<div class="enemy-card" class:expanded={isExpanded}>
+						<button 
+							class="enemy-header"
+							onclick={() => toggleExpanded(enemy.id)}
+							aria-expanded={isExpanded}
+						>
+							<div class="enemy-info">
+								<div class="enemy-avatar">
+									{enemy.name.charAt(0).toUpperCase()}
+								</div>
+								<div class="enemy-details">
+									<h3 class="enemy-name">{enemy.name}</h3>
+									{#if enemy.nickname}
+										<p class="enemy-nickname">"{enemy.nickname}"</p>
+									{/if}
+								</div>
+							</div>
+							<div class="enemy-meta">
+								<span class="grievance-count">
+									{enemy.grievance_count} {enemy.grievance_count === 1 ? 'reason' : 'reasons'}
+								</span>
+								{#if isExpanded}
+									<ChevronUp size={20} />
+								{:else}
+									<ChevronDown size={20} />
+								{/if}
+							</div>
+						</button>
 
-			<!-- Getting Started Card -->
-			<div class="card card-wide">
-				<div class="card-header">
-					<h2>Getting Started</h2>
-				</div>
-				<div class="card-body">
-					<div class="checklist">
-						<div class="check-item done">
-							<span class="check">✓</span>
-							<span>Set up authentication</span>
-						</div>
-						<div class="check-item done">
-							<span class="check">✓</span>
-							<span>Create protected routes</span>
-						</div>
-						<div class="check-item">
-							<span class="check">○</span>
-							<span>Deploy Umami analytics</span>
-						</div>
-						<div class="check-item">
-							<span class="check">○</span>
-							<span>Deploy to Cloudflare Pages</span>
-						</div>
+						{#if isExpanded}
+							<div class="enemy-expanded animate-in">
+								<!-- Grievances List -->
+								<div class="grievances-section">
+									<h4>Why they're on the list:</h4>
+									{#if enemy.grievances.length === 0}
+										<p class="no-grievances">No reasons yet. What are you waiting for?</p>
+									{:else}
+										<ul class="grievances-list">
+											{#each enemy.grievances as grievance (grievance.id)}
+												<li class="grievance-item">
+													<span>{grievance.reason}</span>
+													<form 
+														method="POST" 
+														action="?/deleteGrievance"
+														use:enhance={() => {
+															return async ({ update }) => {
+																await update();
+															};
+														}}
+													>
+														<input type="hidden" name="grievanceId" value={grievance.id} />
+														<button type="submit" class="btn-icon" aria-label="Delete grievance">
+															<X size={14} />
+														</button>
+													</form>
+												</li>
+											{/each}
+										</ul>
+									{/if}
+								</div>
+
+								<!-- Add Grievance Form -->
+								<form 
+									method="POST" 
+									action="?/addGrievance"
+									class="add-grievance-form"
+									use:enhance={() => {
+										addingGrievance = true;
+										return async ({ update }) => {
+											addingGrievance = false;
+											await update();
+										};
+									}}
+								>
+									<input type="hidden" name="enemyId" value={enemy.id} />
+									<div class="grievance-input-row">
+										<input 
+											type="text" 
+											name="reason" 
+											class="input" 
+											placeholder="What did they do now?"
+											required
+										/>
+										<button type="submit" class="btn btn-primary" disabled={addingGrievance}>
+											{addingGrievance ? '...' : 'Add'}
+										</button>
+									</div>
+								</form>
+
+								<!-- Delete Enemy -->
+								<div class="enemy-actions">
+									<form 
+										method="POST" 
+										action="?/deleteEnemy"
+										use:enhance={() => {
+											deletingId = enemy.id;
+											return async ({ update }) => {
+												deletingId = null;
+												await update();
+											};
+										}}
+									>
+										<input type="hidden" name="enemyId" value={enemy.id} />
+										<button 
+											type="submit" 
+											class="btn btn-ghost btn-danger"
+											disabled={deletingId === enemy.id}
+										>
+											<Trash2 size={16} />
+											{deletingId === enemy.id ? 'Removing...' : 'Remove from list'}
+										</button>
+									</form>
+								</div>
+							</div>
+						{/if}
 					</div>
-				</div>
-			</div>
+				{/each}
+			{/if}
 		</div>
 	</div>
 </main>
@@ -96,7 +257,7 @@
 <style>
 	.dashboard {
 		min-height: 100vh;
-		padding: 3rem 0;
+		padding: 2rem 0;
 		background: var(--bg-primary);
 	}
 
@@ -104,154 +265,292 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 3rem;
+		margin-bottom: 2rem;
 		padding-bottom: 1.5rem;
 		border-bottom: 1px solid var(--border);
 	}
 
 	.dashboard-header h1 {
-		font-size: 1.5rem;
+		font-size: 1.75rem;
 		margin-bottom: 0.25rem;
 	}
 
-	.dashboard-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 1.5rem;
+	.tagline {
+		color: var(--text-muted);
+		font-size: 0.9375rem;
+		font-style: italic;
 	}
 
-	.card {
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	/* Add Form */
+	.add-form-container {
+		margin-bottom: 2rem;
+	}
+
+	.add-form {
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 1.5rem;
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.form-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+	}
+
+	/* Empty State */
+	.empty-state {
+		text-align: center;
+		padding: 4rem 2rem;
+		background: var(--bg-card);
+		border: 1px dashed var(--border);
+		border-radius: 8px;
+	}
+
+	.empty-icon {
+		color: var(--text-muted);
+		margin-bottom: 1rem;
+	}
+
+	.empty-state h2 {
+		font-size: 1.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.empty-state p {
+		color: var(--text-secondary);
+		margin-bottom: 1.5rem;
+	}
+
+	/* Enemy List */
+	.enemy-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.enemy-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		overflow: hidden;
+		transition: box-shadow 0.2s ease;
+	}
+
+	.enemy-card:hover {
 		box-shadow: var(--shadow-sm);
 	}
 
-	.card-wide {
-		grid-column: 1 / -1;
+	.enemy-card.expanded {
+		border-color: var(--accent);
 	}
 
-	.card-header {
-		padding: 1.25rem 1.5rem;
-		border-bottom: 1px solid var(--border-subtle);
-		background: var(--bg-secondary);
-	}
-
-	.card-header h2 {
-		font-size: 0.875rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-secondary);
-	}
-
-	.card-body {
-		padding: 1.5rem;
-	}
-
-	.info-row {
+	.enemy-header {
+		width: 100%;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.75rem 0;
+		padding: 1rem 1.25rem;
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-align: left;
 	}
 
-	.info-row:not(:last-child) {
-		border-bottom: 1px solid var(--border-subtle);
-	}
-
-	.label {
-		color: var(--text-secondary);
-		font-size: 0.8125rem;
-		font-weight: 500;
-	}
-
-	.value {
-		font-weight: 600;
-		font-size: 0.875rem;
-	}
-
-	code.value {
-		font-family: 'JetBrains Mono', monospace;
-		font-size: 0.75rem;
+	.enemy-header:hover {
 		background: var(--bg-secondary);
-		padding: 0.2rem 0.4rem;
-		border-radius: 4px;
-		color: var(--text-primary);
 	}
 
-	.btn-full {
-		width: 100%;
-	}
-
-	.action-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+	.enemy-info {
+		display: flex;
+		align-items: center;
 		gap: 1rem;
 	}
 
-	.action-item {
+	.enemy-avatar {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		background: var(--accent);
+		color: white;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 1rem;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		color: var(--text-primary);
-		font-size: 0.8125rem;
-		font-weight: 600;
-		transition: all 0.2s ease;
+		font-weight: 700;
+		font-size: 1.125rem;
 	}
 
-	.action-item:hover {
-		border-color: var(--accent);
-		background: var(--accent-soft);
-		color: var(--accent);
-	}
-
-	.checklist {
+	.enemy-details {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
 	}
 
-	.check-item {
+	.enemy-name {
+		font-size: 1rem;
+		font-weight: 600;
+		margin: 0;
+	}
+
+	.enemy-nickname {
+		font-size: 0.8125rem;
+		color: var(--text-secondary);
+		font-style: italic;
+		margin: 0.125rem 0 0 0;
+	}
+
+	.enemy-meta {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		padding: 1rem;
+		color: var(--text-secondary);
+	}
+
+	.grievance-count {
+		font-size: 0.8125rem;
+		font-weight: 500;
+		background: var(--accent-soft);
+		color: var(--accent);
+		padding: 0.25rem 0.625rem;
+		border-radius: 100px;
+	}
+
+	/* Expanded Section */
+	.enemy-expanded {
+		padding: 1.25rem;
+		border-top: 1px solid var(--border);
 		background: var(--bg-secondary);
+	}
+
+	.grievances-section h4 {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-secondary);
+		margin-bottom: 0.75rem;
+	}
+
+	.no-grievances {
+		color: var(--text-muted);
+		font-size: 0.875rem;
+		font-style: italic;
+		margin-bottom: 1rem;
+	}
+
+	.grievances-list {
+		list-style: none;
+		margin: 0 0 1rem 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.grievance-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: var(--bg-card);
+		padding: 0.75rem 1rem;
 		border-radius: 6px;
+		font-size: 0.875rem;
 		border: 1px solid var(--border-subtle);
 	}
 
-	.check-item.done {
-		background: #fff;
-		border-color: #dcfce7;
-	}
-
-	.check-item.done .check {
-		color: #16a34a;
-	}
-
-	.check {
-		font-family: 'JetBrains Mono', monospace;
-		font-weight: 700;
+	.btn-icon {
+		background: none;
+		border: none;
+		padding: 0.25rem;
+		cursor: pointer;
 		color: var(--text-muted);
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
+	.btn-icon:hover {
+		background: var(--bg-secondary);
+		color: var(--error);
+	}
+
+	/* Add Grievance Form */
+	.add-grievance-form {
+		margin-bottom: 1rem;
+	}
+
+	.grievance-input-row {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.grievance-input-row .input {
+		flex: 1;
+	}
+
+	/* Enemy Actions */
+	.enemy-actions {
+		padding-top: 1rem;
+		border-top: 1px solid var(--border-subtle);
+	}
+
+	.btn-danger {
+		color: var(--error);
+	}
+
+	.btn-danger:hover {
+		background: #fef2f2;
+	}
+
+	/* Responsive */
 	@media (max-width: 640px) {
 		.dashboard-header {
 			flex-direction: column;
-			gap: 1.5rem;
+			gap: 1rem;
 			text-align: center;
 		}
 
-		.action-grid {
+		.header-actions {
+			flex-direction: column;
+			width: 100%;
+		}
+
+		.header-actions .btn {
+			width: 100%;
+		}
+
+		.form-row {
 			grid-template-columns: 1fr;
+		}
+
+		.enemy-header {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.75rem;
+		}
+
+		.enemy-meta {
+			width: 100%;
+			justify-content: space-between;
 		}
 	}
 </style>
-

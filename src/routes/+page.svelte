@@ -1,23 +1,24 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	// Import icons from specific paths to avoid SSR issues
+	import Users from 'lucide-svelte/icons/users';
+	import ListX from 'lucide-svelte/icons/list-x';
 	import Lock from 'lucide-svelte/icons/lock';
-	import Database from 'lucide-svelte/icons/database';
-	import TrendingUp from 'lucide-svelte/icons/trending-up';
+	import Twitter from 'lucide-svelte/icons/twitter';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>
-	<title>Indie Hacker Stack | Ship Fast</title>
-	<meta name="description" content="SvelteKit + Supabase - The indie hacker's stack for shipping fast" />
+	<title>HateCRM | Track Your Grievances</title>
+	<meta name="description" content="A CRM for keeping track of people you don't like and why. Organize your grievances." />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
 <main class="hero">
 	<div class="container">
 		<nav class="nav animate-in">
 			<div class="logo">
-				<span>ShipFast</span>
+				<span>HateCRM</span>
 			</div>
 			<div class="nav-links">
 				{#if data.user}
@@ -27,78 +28,79 @@
 					</form>
 				{:else}
 					<a href="/auth/login" class="btn btn-ghost">Sign In</a>
-					<a href="/auth/signup" class="btn btn-primary">Get Started</a>
+					<a href="/list" class="btn btn-primary">Get Started</a>
 				{/if}
 			</div>
 		</nav>
 
 		<section class="hero-content">
-			<div class="badge animate-in">Built for Indie Hackers</div>
+			<div class="badge animate-in">For the petty professional</div>
 			<h1 class="animate-in delay-1">
-				Ship your SaaS<br />
-				<span class="text-accent">in days, not months</span>
+				Remember why you<br />
+				<span class="text-accent">don't like them</span>
 			</h1>
 			<p class="hero-subtitle animate-in delay-2">
-				The complete stack for building and launching your next project. 
-				SvelteKit and Supabase Auth. Minimal config, maximum speed.
+				Finally, a CRM that gets you. Track people who've wronged you, 
+				document their offenses, and never forget a grievance again.
 			</p>
 			<div class="hero-cta animate-in delay-3">
 				{#if data.user}
-					<a href="/dashboard" class="btn btn-primary">Go to Dashboard →</a>
+					<a href="/dashboard" class="btn btn-primary">View Your List</a>
 				{:else}
-					<a href="/auth/signup" class="btn btn-primary">Start Building →</a>
+					<a href="/list" class="btn btn-primary">Start Your List</a>
+					<a href="/auth/login" class="btn btn-secondary">Sign In</a>
 				{/if}
-				<a href="#features" class="btn btn-secondary">See Features</a>
 			</div>
+			<p class="no-signup-note animate-in delay-3">No account required. Your list stays in your browser.</p>
 		</section>
 
 		<section id="features" class="features">
 			<div class="feature-grid">
 				<div class="card card-hover animate-in">
 					<div class="feature-icon">
-						<Lock size={24} />
+						<Users size={24} />
 					</div>
-					<h3>Supabase Auth</h3>
-					<p>Secure authentication with email, Google, and GitHub. Safe server-side sessions pre-configured.</p>
+					<h3>Track Your Enemies</h3>
+					<p>Add people to your list with names and optional nicknames like "The Reply-All Guy" or "Loud Chewer Dave".</p>
 				</div>
 
 				<div class="card card-hover animate-in delay-1">
 					<div class="feature-icon">
-						<Database size={24} />
+						<ListX size={24} />
 					</div>
-					<h3>Supabase Database</h3>
-					<p>Postgres database with Row Level Security. Real-time subscriptions and auto-generated APIs.</p>
+					<h3>Document Grievances</h3>
+					<p>Log every offense. Every slight. Every time they microwave fish in the office. Your memory is now bulletproof.</p>
 				</div>
 
 				<div class="card card-hover animate-in delay-2">
 					<div class="feature-icon">
-						<TrendingUp size={24} />
+						<Lock size={24} />
 					</div>
-					<h3>Umami Analytics</h3>
-					<p>Privacy-first, self-hosted analytics. Track your growth without compromising user privacy.</p>
+					<h3>Private & Secure</h3>
+					<p>Your list is yours alone. Encrypted and protected. They'll never know they're on it.</p>
 				</div>
 			</div>
 		</section>
 
-		<section class="stack-preview">
-			<div class="code-block animate-in delay-3">
-				<div class="code-header">
-					<span class="dot red"></span>
-					<span class="dot yellow"></span>
-					<span class="dot green"></span>
-					<span class="file-name">hooks.server.ts</span>
-				</div>
-				<pre><code>{`export const handle: Handle = async ({ event, resolve }) => {
-  event.locals.supabase = createServerClient(...)
-  event.locals.safeGetSession = async () => { ... }
-  
-  return resolve(event);
-};`}</code></pre>
+		<section class="testimonial-section animate-in delay-3">
+			<div class="testimonial">
+				<blockquote>
+					"I used to forget why I was annoyed at people. Now I have receipts."
+				</blockquote>
+				<p class="attribution">— A very organized grudge-holder</p>
 			</div>
 		</section>
 
 		<footer class="footer">
-			<p class="text-muted">Built with SvelteKit and Supabase</p>
+			<div class="footer-links">
+				<a href="/about">About</a>
+				<a href="https://twitter.com/YOUR_HANDLE" target="_blank" rel="noopener">
+					<Twitter size={16} />
+					Twitter
+				</a>
+				<a href="https://slopcel.com" target="_blank" rel="noopener">Slopcel</a>
+			</div>
+			<p class="text-muted">Keep your enemies closer. In a database.</p>
 		</footer>
 	</div>
 </main>
@@ -138,12 +140,12 @@
 	.badge {
 		display: inline-block;
 		padding: 0.375rem 0.875rem;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		background: var(--accent-soft);
+		border: 1px solid var(--accent);
 		border-radius: 100px;
 		font-size: 0.75rem;
 		font-weight: 600;
-		color: var(--text-secondary);
+		color: var(--accent);
 		margin-bottom: 2rem;
 	}
 
@@ -163,6 +165,12 @@
 		display: flex;
 		justify-content: center;
 		gap: 1rem;
+	}
+
+	.no-signup-note {
+		margin-top: 1rem;
+		font-size: 0.8125rem;
+		color: var(--text-muted);
 	}
 
 	.features {
@@ -198,54 +206,32 @@
 		line-height: 1.6;
 	}
 
-	.stack-preview {
-		padding-bottom: 6rem;
+	.testimonial-section {
+		padding: 4rem 0 6rem;
 	}
 
-	.code-block {
-		background: var(--bg-secondary);
+	.testimonial {
+		max-width: 600px;
+		margin: 0 auto;
+		text-align: center;
+		padding: 2.5rem;
+		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 8px;
-		overflow: hidden;
+		border-radius: 12px;
 		box-shadow: var(--shadow-sm);
 	}
 
-	.code-header {
-		padding: 0.625rem 1rem;
-		background: #fff;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		border-bottom: 1px solid var(--border);
-	}
-
-	.dot {
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-	}
-
-	.dot.red { background: #ff5f56; opacity: 0.4; }
-	.dot.yellow { background: #ffbd2e; opacity: 0.4; }
-	.dot.green { background: #27c93f; opacity: 0.4; }
-
-	.file-name {
-		margin-left: 0.5rem;
-		font-size: 0.75rem;
-		font-weight: 500;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-	}
-
-	.code-block pre {
-		padding: 1.25rem 1.5rem;
-		margin: 0;
-	}
-
-	.code-block code {
-		font-size: 0.8125rem;
+	.testimonial blockquote {
+		font-size: 1.25rem;
+		font-style: italic;
 		color: var(--text-primary);
 		line-height: 1.6;
+		margin-bottom: 1rem;
+	}
+
+	.attribution {
+		color: var(--text-muted);
+		font-size: 0.875rem;
 	}
 
 	.footer {
@@ -254,18 +240,124 @@
 		border-top: 1px solid var(--border-subtle);
 	}
 
-	@media (max-width: 640px) {
+	.footer-links {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.footer-links a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		color: var(--text-secondary);
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.footer-links a:hover {
+		color: var(--accent);
+	}
+
+	@media (max-width: 768px) {
+		.nav {
+			padding: 1rem 0;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+		}
+
+		.nav-links {
+			gap: 0.5rem;
+		}
+
+		.nav-links .btn {
+			padding: 0.5rem 0.875rem;
+			font-size: 0.8125rem;
+		}
+
+		.hero-content {
+			padding: 3rem 0 2rem;
+		}
+
 		.hero-content h1 {
-			font-size: 2.5rem;
+			font-size: 2rem;
+		}
+
+		.badge {
+			font-size: 0.6875rem;
+			padding: 0.25rem 0.625rem;
+			margin-bottom: 1.5rem;
+		}
+
+		.hero-subtitle {
+			font-size: 1rem;
+			margin-bottom: 2rem;
 		}
 
 		.hero-cta {
 			flex-direction: column;
+			gap: 0.75rem;
 		}
 
 		.hero-cta .btn {
 			width: 100%;
 		}
+
+		.no-signup-note {
+			font-size: 0.75rem;
+		}
+
+		.features {
+			padding: 3rem 0;
+		}
+
+		.feature-grid {
+			gap: 1.25rem;
+		}
+
+		.features h3 {
+			font-size: 1.125rem;
+		}
+
+		.features p {
+			font-size: 0.875rem;
+		}
+
+		.testimonial-section {
+			padding: 2rem 0 3rem;
+		}
+
+		.testimonial {
+			padding: 1.5rem;
+		}
+
+		.testimonial blockquote {
+			font-size: 1rem;
+		}
+
+		.footer {
+			padding: 2rem 0 1.5rem;
+		}
+
+		.footer-links {
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.footer-links a {
+			font-size: 0.8125rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.hero-content h1 {
+			font-size: 1.75rem;
+		}
+
+		.feature-icon {
+			width: 40px;
+			height: 40px;
+		}
 	}
 </style>
-

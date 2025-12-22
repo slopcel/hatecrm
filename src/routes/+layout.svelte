@@ -2,6 +2,7 @@
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import type { LayoutData } from './$types';
+	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
 
 	let { data, children }: { data: LayoutData; children: any } = $props();
@@ -19,5 +20,6 @@
 	});
 </script>
 
+<Toaster richColors position="top-right" />
 {@render children()}
 
