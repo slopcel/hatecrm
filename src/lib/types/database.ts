@@ -39,41 +39,6 @@ export interface Database {
 					updated_at?: string;
 				};
 			};
-			subscriptions: {
-				Row: {
-					id: string;
-					user_id: string;
-					dodo_customer_id: string | null;
-					dodo_subscription_id: string | null;
-					status: string;
-					plan: string | null;
-					current_period_end: string | null;
-					created_at: string;
-					updated_at: string;
-				};
-				Insert: {
-					id?: string;
-					user_id: string;
-					dodo_customer_id?: string | null;
-					dodo_subscription_id?: string | null;
-					status?: string;
-					plan?: string | null;
-					current_period_end?: string | null;
-					created_at?: string;
-					updated_at?: string;
-				};
-				Update: {
-					id?: string;
-					user_id?: string;
-					dodo_customer_id?: string | null;
-					dodo_subscription_id?: string | null;
-					status?: string;
-					plan?: string | null;
-					current_period_end?: string | null;
-					created_at?: string;
-					updated_at?: string;
-				};
-			};
 		};
 		Views: {};
 		Functions: {};

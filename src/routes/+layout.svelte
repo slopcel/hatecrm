@@ -7,22 +7,17 @@
 	let { data, children }: { data: LayoutData; children: any } = $props();
 
 	onMount(() => {
-		// Listen for auth state changes and invalidate the layout
 		const {
 			data: { subscription }
 		} = data.supabase.auth.onAuthStateChange((event, session) => {
-			if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+			if (session?.expires_at !== data.session?.expires_at) {
 				invalidate('supabase:auth');
 			}
 		});
 
-		return () => {
-			subscription.unsubscribe();
-		};
+		return () => subscription.unsubscribe();
 	});
 </script>
 
-<div class="app">
-	{@render children()}
-</div>
+{@render children()}
 

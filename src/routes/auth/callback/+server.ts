@@ -1,21 +1,19 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-// Handle OAuth callback - exchange code for session
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const code = url.searchParams.get('code');
-	const next = url.searchParams.get('next') ?? '/dashboard';
+	const redirectTo = url.searchParams.get('redirectTo') ?? '/dashboard';
 
 	if (code) {
 		const { error } = await locals.supabase.auth.exchangeCodeForSession(code);
 
-		if (!error) {
-			// Successful auth - redirect to dashboard or intended destination
-			redirect(303, next);
+		if (error) {
+			console.error('OAuth callback error:', error.message);
+			redirect(303, '/auth/login?error=Could not authenticate');
 		}
 	}
 
-	// Auth failed - redirect to error page or login
-	redirect(303, '/auth/login?error=auth_failed');
+	redirect(303, redirectTo);
 };
 

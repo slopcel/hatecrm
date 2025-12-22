@@ -1,6 +1,6 @@
 # Indie Hacker Stack
 
-Ship fast with **SvelteKit + Supabase + DodoPay + Cloudflare Pages**.
+Ship fast with **SvelteKit + Supabase + Cloudflare Pages**.
 
 ## Stack Overview
 
@@ -10,7 +10,6 @@ Ship fast with **SvelteKit + Supabase + DodoPay + Cloudflare Pages**.
 | **Hosting** | Cloudflare Pages |
 | **Database** | Supabase (Postgres) |
 | **Auth** | Supabase Auth (free!) |
-| **Payments** | DodoPay |
 | **Analytics** | Umami (self-hosted) |
 
 ## Quick Start
@@ -35,12 +34,6 @@ npm run dev
 # Supabase (from project settings > API)
 PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 PUBLIC_SUPABASE_ANON_KEY=xxx
-
-# DodoPay (from dashboard)
-DODO_PAYMENTS_API_KEY=xxx
-DODO_PAYMENTS_WEBHOOK_KEY=xxx
-DODO_PAYMENTS_ENVIRONMENT=test_mode
-DODO_PAYMENTS_RETURN_URL=http://localhost:5173/dashboard
 ```
 
 ### Optional (Umami Analytics)
@@ -72,13 +65,7 @@ src/
     │   ├── signup/       # Registration
     │   ├── callback/     # OAuth callback handler
     │   └── logout/       # Sign out endpoint
-    ├── dashboard/        # Protected route example
-    ├── pricing/          # Pricing page with checkout
-    └── api/
-        ├── checkout/     # DodoPay checkout sessions
-        ├── portal/       # DodoPay customer portal
-        └── webhooks/
-            └── dodopay/  # DodoPay webhook handler
+    └── dashboard/        # Protected route example
 ```
 
 ## Auth Implementation
@@ -101,34 +88,6 @@ if (!session) {
 1. Enable providers in Supabase Dashboard > Authentication > Providers
 2. Add redirect URL: `https://your-domain.com/auth/callback`
 3. OAuth buttons are already wired up in login/signup pages
-
-## Payments
-
-### Creating a Checkout
-
-```svelte
-<form action="/api/checkout" method="POST">
-  <input type="hidden" name="product_id" value="pdt_xxx" />
-  <input type="hidden" name="external_id" value={userId} />
-  <input type="hidden" name="email" value={userEmail} />
-  <button type="submit">Subscribe</button>
-</form>
-```
-
-### Customer Portal
-
-```svelte
-<form action="/api/portal" method="POST">
-  <input type="hidden" name="customer_id" value={dodoCustomerId} />
-  <button type="submit">Manage Subscription</button>
-</form>
-```
-
-### Webhooks
-
-Configure in DodoPay dashboard: `https://your-domain.com/api/webhooks/dodopay`
-
-Edit `src/routes/api/webhooks/dodopay/+server.ts` to handle events.
 
 ## Deployment
 
@@ -161,22 +120,8 @@ create table profiles (
   updated_at timestamptz default now()
 );
 
--- Create subscriptions table
-create table subscriptions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users not null,
-  dodo_customer_id text,
-  dodo_subscription_id text,
-  status text default 'inactive',
-  plan text,
-  current_period_end timestamptz,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
 -- Enable RLS
 alter table profiles enable row level security;
-alter table subscriptions enable row level security;
 
 -- RLS policies
 create policy "Users can view own profile"
@@ -184,9 +129,6 @@ create policy "Users can view own profile"
 
 create policy "Users can update own profile"
   on profiles for update using (auth.uid() = id);
-
-create policy "Users can view own subscription"
-  on subscriptions for select using (auth.uid() = user_id);
 ```
 
 ### Umami Analytics
@@ -197,6 +139,15 @@ create policy "Users can view own subscription"
 4. Set `DATABASE_URL` and `DIRECT_DATABASE_URL` in Umami deployment
 5. Add website and copy the website ID
 6. Set `PUBLIC_UMAMI_HOST` and `PUBLIC_UMAMI_WEBSITE_ID` in your app
+
+## Adding Payments
+
+This template doesn't include payment processing by default. When you're ready to monetize, you can integrate:
+
+- **Stripe** - Most popular, great documentation
+- **Paddle** - Handles tax compliance for you
+- **LemonSqueezy** - Good for digital products
+- **DodoPay** - Simple API, good for indie hackers
 
 ## Philosophy
 

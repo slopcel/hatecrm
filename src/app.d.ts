@@ -12,11 +12,7 @@ declare global {
 			user: User | null;
 		}
 		// interface Error {}
-		interface Platform {
-			env?: {
-				// Add your Cloudflare bindings here if needed
-			};
-		}
+		// interface Platform {}
 	}
 }
 

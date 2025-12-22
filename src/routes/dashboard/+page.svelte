@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	interface DashboardData {
+		user: PageData['user'];
+	}
+
+	let { data }: { data: DashboardData } = $props();
 </script>
 
 <svelte:head>
@@ -42,34 +46,6 @@
 				</div>
 			</div>
 
-			<!-- Subscription Card -->
-			<div class="card">
-				<div class="card-header">
-					<h2>Subscription</h2>
-				</div>
-				<div class="card-body">
-					{#if data.subscription}
-						<div class="subscription-status active">
-							<span class="status-dot"></span>
-							<span>{data.subscription.status}</span>
-						</div>
-						<div class="info-row">
-							<span class="label">Plan</span>
-							<span class="value">{data.subscription.plan ?? 'Pro'}</span>
-						</div>
-						<a 
-							href="/api/portal?customer_id={data.subscription.dodo_customer_id}" 
-							class="btn btn-secondary btn-full mt-3"
-						>
-							Manage Subscription
-						</a>
-					{:else}
-						<p class="text-secondary mb-3">No active subscription</p>
-						<a href="/pricing" class="btn btn-primary btn-full">Upgrade to Pro</a>
-					{/if}
-				</div>
-			</div>
-
 			<!-- Quick Actions Card -->
 			<div class="card">
 				<div class="card-header">
@@ -77,17 +53,11 @@
 				</div>
 				<div class="card-body">
 					<div class="action-grid">
-						<a href="/pricing" class="action-item">
-							<span>View Pricing</span>
-						</a>
 						<a href="/" class="action-item">
 							<span>Home</span>
 						</a>
 						<a href="https://supabase.com/dashboard" target="_blank" rel="noopener" class="action-item">
 							<span>Supabase</span>
-						</a>
-						<a href="https://app.dodopayments.com" target="_blank" rel="noopener" class="action-item">
-							<span>DodoPay</span>
 						</a>
 					</div>
 				</div>
@@ -107,10 +77,6 @@
 						<div class="check-item done">
 							<span class="check">✓</span>
 							<span>Create protected routes</span>
-						</div>
-						<div class="check-item">
-							<span class="check">○</span>
-							<span>Configure DodoPay webhook endpoint in dashboard</span>
 						</div>
 						<div class="check-item">
 							<span class="check">○</span>
@@ -213,32 +179,6 @@
 		padding: 0.2rem 0.4rem;
 		border-radius: 4px;
 		color: var(--text-primary);
-	}
-
-	.subscription-status {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.375rem 0.75rem;
-		border-radius: 4px;
-		font-size: 0.75rem;
-		font-weight: 700;
-		margin-bottom: 1.25rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	.subscription-status.active {
-		background: #f0fdf4;
-		color: #16a34a;
-		border: 1px solid #dcfce7;
-	}
-
-	.status-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: currentColor;
 	}
 
 	.btn-full {
