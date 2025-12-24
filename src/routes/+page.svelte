@@ -4,6 +4,7 @@
 	import ListX from 'lucide-svelte/icons/list-x';
 	import Lock from 'lucide-svelte/icons/lock';
 	import Twitter from 'lucide-svelte/icons/twitter';
+	import Globe from 'lucide-svelte/icons/globe';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -131,6 +132,46 @@
 					"I used to forget why I was annoyed at people. Now I have receipts."
 				</blockquote>
 				<p class="attribution">— A very organized grudge-holder</p>
+			</div>
+		</section>
+
+		<section class="about-section">
+			<h2 class="section-title">Meet the Creator</h2>
+			<div class="creator-card">
+				<div class="creator-avatar">
+					<img src="https://slopcel.com/_next/image?url=%2Fmadiou_logo.jpg&w=256&q=75" alt="Madiou" />
+				</div>
+				<div class="creator-info">
+					<h3>Hey, there friends 👋</h3>
+					<p class="creator-title">CEO @ <a href="https://slopcel.com" target="_blank" rel="noopener">Slopcel</a></p>
+
+					<p class="creator-bio">
+							
+						I made this website as a joke after seeing this tweet on my timeline.
+					</p>
+					<blockquote class="twitter-tweet"><p lang="en" dir="ltr">who&#39;s building a CRM to keep track of why i don&#39;t like people</p>&mdash; dax (@thdxr) <a href="https://twitter.com/thdxr/status/1976444518150135833?ref_src=twsrc%5Etfw">October 10, 2025</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+					<p class="creator-bio">
+						It gave me the chance to try out svelte and do some more vibe coding, so I'm pretty happy with it.
+						<br> <br>
+						HateCRM is a playful take on customer relationship management. Instead of tracking customers,
+						you track people you hate. Document their offenses, link their tweets, and never 
+						forget a grievance again.
+						<br> <br>
+						You can sign up with your Google account and start tracking your grievances.
+						Whether it's an ragebaiting account or just someone with really bad takes, HateCRM helps you keep receipts.
+
+					</p>
+					<div class="creator-links">
+						<a href="https://twitter.com/_madiou" target="_blank" rel="noopener" class="creator-social-link">
+							<Twitter size={18} />
+							@_madiou
+						</a>
+						<a href="https://slopcel.com" target="_blank" rel="noopener" class="creator-social-link">
+							<Globe size={18} />
+							Slopcel
+						</a>
+					</div>
+				</div>
 			</div>
 		</section>
 
@@ -275,6 +316,104 @@
 	.attribution {
 		color: var(--text-muted);
 		font-size: 0.875rem;
+	}
+
+	/* About Section */
+	.section-title {
+		text-align: center;
+		font-size: 2.5rem;
+		margin-bottom: 3rem;
+	}
+	
+	.about-section {
+		padding: 6rem 0;
+	}
+
+	.creator-card {
+		max-width: 800px;
+		margin: 0 auto;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 16px;
+		padding: 2.5rem;
+		display: flex;
+		gap: 2rem;
+		align-items: flex-start;
+	}
+
+	.creator-avatar {
+		flex-shrink: 0;
+	}
+
+	.creator-avatar img {
+		width: 100px;
+		height: 100px;
+		border-radius: 12px;
+		object-fit: cover;
+	}
+
+	.creator-info {
+		flex: 1;
+		text-align: left;
+	}
+
+	.creator-info h3 {
+		font-size: 1.75rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.creator-title {
+		color: var(--accent);
+		font-weight: 600;
+		margin-bottom: 1.5rem;
+	}
+
+	.creator-title a {
+		color: var(--accent);
+		text-decoration: none;
+	}
+
+	.creator-title a:hover {
+		text-decoration: underline;
+	}
+
+	.creator-bio {
+		color: var(--text-secondary);
+		line-height: 1.7;
+		margin-bottom: 1.5rem;
+		font-size: 0.9375rem;
+	}
+
+	/* Twitter embed styling */
+	.twitter-tweet {
+		margin: 1.5rem 0 !important;
+		max-width: 100% !important;
+	}
+
+	.creator-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
+	}
+
+	.creator-social-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		color: var(--text-primary);
+		font-size: 0.875rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.creator-social-link:hover {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 
 	.footer {
