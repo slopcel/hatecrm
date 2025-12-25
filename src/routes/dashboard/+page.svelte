@@ -18,7 +18,7 @@
 	import { browser } from '$app/environment';
 	import { hasLocalData, getAllDataForSync, clearAllData, cleanTwitterHandle, extractTweetId } from '$lib/stores/localEnemies';
 	import { invalidateAll } from '$app/navigation';
-
+	
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let showAddForm = $state(false);

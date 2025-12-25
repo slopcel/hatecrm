@@ -5,6 +5,10 @@
 	import Lock from 'lucide-svelte/icons/lock';
 	import Twitter from 'lucide-svelte/icons/twitter';
 	import Globe from 'lucide-svelte/icons/globe';
+	import { page } from '$app/stores';
+
+	// Get base URL for OG images
+	let baseUrl = $derived($page.url.origin);
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -13,7 +17,7 @@
 	<title>HateCRM | Track Your Grievances</title>
 	<meta name="description" content="A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again." />
 	<meta name="keywords" content="CRM, grievances, track enemies, enemy list, grudge tracker, offense tracker" />
-	<link rel="canonical" href="https://hatecrm.com" />
+	<link rel="canonical" href={baseUrl} />
 	
 	<!-- Open Graph -->
 	<meta property="og:site_name" content="HateCRM" />
@@ -23,7 +27,7 @@
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://hatecrm.com" />
+	<meta property="og:url" content={baseUrl} />
 	<meta property="og:locale" content="en_US" />
 	
 	<!-- Twitter Card -->
@@ -32,7 +36,7 @@
 	<meta name="twitter:creator" content="@_madiou" />
 	<meta name="twitter:title" content="HateCRM | Track Your Grievances" />
 	<meta name="twitter:description" content="A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again." />
-	<meta name="twitter:image" content="https://hatecrm.com/main-og-image.png" />
+	<meta name="twitter:image" content="{baseUrl}/main-og-image.png" />
 	
 	<!-- Structured Data -->
 	{@html `<script type="application/ld+json">
@@ -41,7 +45,7 @@
 		"@type": "WebApplication",
 		"name": "HateCRM",
 		"description": "A CRM for keeping track of people you don't like and why. Track enemies, document offenses, and never forget a grievance again.",
-		"url": "https://hatecrm.com",
+		"url": "${baseUrl}",
 		"applicationCategory": "Productivity",
 		"operatingSystem": "Web",
 		"offers": {

@@ -1,21 +1,24 @@
 <script lang="ts">
 	import Twitter from 'lucide-svelte/icons/twitter';
 	import Globe from 'lucide-svelte/icons/globe';
+	import { page } from '$app/stores';
+
+	let baseUrl = $derived($page.url.origin);
 </script>
 
 <svelte:head>
 	<title>About | HateCRM</title>
 	<meta name="description" content="Learn about HateCRM and its creator Madiou. The story behind the grievance tracker that helps you keep receipts." />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="canonical" href="https://hatecrm.com/about" />
+	<link rel="canonical" href={`${baseUrl}/about`} />
 	
 	<!-- Open Graph -->
 	<meta property="og:site_name" content="HateCRM" />
 	<meta property="og:title" content="About | HateCRM" />
 	<meta property="og:description" content="Learn about HateCRM and its creator Madiou. The story behind the grievance tracker." />
-	<meta property="og:image" content="https://hatecrm.com/main-og-image.png" />
+	<meta property="og:image" content="{baseUrl}/main-og-image.png" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://hatecrm.com/about" />
+	<meta property="og:url" content={`${baseUrl}/about`} />
 	
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
@@ -23,7 +26,7 @@
 	<meta name="twitter:creator" content="@_madiou" />
 	<meta name="twitter:title" content="About | HateCRM" />
 	<meta name="twitter:description" content="Learn about HateCRM and its creator Madiou. The story behind the grievance tracker." />
-	<meta name="twitter:image" content="https://hatecrm.com/main-og-image.png" />
+	<meta name="twitter:image" content="{baseUrl}/main-og-image.png" />
 </svelte:head>
 
 <main class="about-page">
@@ -50,7 +53,7 @@
 						<p class="creator-title">CEO @ Slopcel</p>
 
 						<p class="creator-bio">
-							<!-- TODO: Add your bio here -->
+							
 							I made this website as a joke after seeing this tweet on my timeline.
 						</p>
 						<blockquote class="twitter-tweet"><p lang="en" dir="ltr">who&#39;s building a CRM to keep track of why i don&#39;t like people</p>&mdash; dax (@thdxr) <a href="https://twitter.com/thdxr/status/1976444518150135833?ref_src=twsrc%5Etfw">October 10, 2025</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>

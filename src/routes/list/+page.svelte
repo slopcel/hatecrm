@@ -30,6 +30,8 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
+	import { page } from '$app/stores';
+	let baseUrl = $derived($page.url.origin);
 
 	let { data }: { data: PageData } = $props();
 
@@ -234,22 +236,22 @@
 	<title>My List | HateCRM</title>
 	<meta name="description" content="Track your enemies and document their offenses. Your personal grievance tracker." />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<link rel="canonical" href="https://hatecrm.com/list" />
+	<link rel="canonical" href={`${baseUrl}/list`} />
 	
 	<!-- Open Graph -->
 	<meta property="og:site_name" content="HateCRM" />
 	<meta property="og:title" content="My List | HateCRM" />
 	<meta property="og:description" content="Track your enemies and document their offenses. Never forget a grievance." />
-	<meta property="og:image" content="https://hatecrm.com/main-og-image.png" />
+	<meta property="og:image" content="{baseUrl}/main-og-image.png" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://hatecrm.com/list" />
+	<meta property="og:url" content={`${baseUrl}/list`} />
 	
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:site" content="@_madiou" />
 	<meta name="twitter:title" content="My List | HateCRM" />
 	<meta name="twitter:description" content="Track your enemies and document their offenses. Never forget a grievance." />
-	<meta name="twitter:image" content="https://hatecrm.com/main-og-image.png" />
+	<meta name="twitter:image" content="{baseUrl}/main-og-image.png" />
 </svelte:head>
 
 <svelte:window 
