@@ -30,8 +30,72 @@
 	let syncing = $state(false);
 	let searchQuery = $state('');
 	let viewMode = $state<'list' | 'whiteboard'>('list');
-	let pfpCache = $state<Record<string, string>>({});
-	let pfpLoading = $state<Record<string, boolean>>({});
+	
+	// Twitter widget loading
+	let twitterScriptLoaded = $state(false);
+	
+	// Load Twitter widgets script
+	$effect(() => {
+		if (browser && !twitterScriptLoaded) {
+			const existingScript = document.querySelector('script[src*="platform.twitter.com/widgets.js"]');
+			if (existingScript) {
+				twitterScriptLoaded = true;
+			} else {
+				const script = document.createElement('script');
+				script.src = 'https://platform.twitter.com/widgets.js';
+				script.async = true;
+				script.charset = 'utf-8';
+				script.onload = () => {
+					twitterScriptLoaded = true;
+				};
+				document.body.appendChild(script);
+			}
+		}
+	});
+	
+	// Function to embed a tweet using createTweet API
+	async function embedTweet(tweetId: string, containerId: string) {
+		if (!browser || !twitterScriptLoaded) return;
+		
+		const container = document.getElementById(containerId);
+		if (!container) return;
+		
+		// Check if tweet is already embedded (has an iframe)
+		if (container.querySelector('iframe')) return;
+		
+		// Clear container
+		container.innerHTML = '';
+		
+		try {
+			const twttr = (window as any).twttr;
+			if (twttr?.widgets?.createTweet) {
+				await twttr.widgets.createTweet(tweetId, container, {
+					theme: 'light',
+					dnt: true
+				});
+			}
+		} catch (error) {
+			console.error('Failed to embed tweet:', error);
+			container.innerHTML = '<p class="tweet-error">Failed to load tweet</p>';
+		}
+	}
+	
+	// Embed tweet when expanded enemy changes
+	$effect(() => {
+		if (browser && expandedEnemyId && twitterScriptLoaded) {
+			const enemy = data.enemies.find(e => e.id === expandedEnemyId);
+			if (enemy?.tweet_url) {
+				const tweetId = extractTweetId(enemy.tweet_url);
+				if (tweetId) {
+					const containerId = `tweet-${enemy.id}`;
+					// Small delay to ensure DOM is updated
+					setTimeout(() => {
+						embedTweet(tweetId, containerId);
+					}, 150);
+				}
+			}
+		}
+	});
 
 	// Whiteboard dragging state
 	let draggingId = $state<string | null>(null);
@@ -121,40 +185,11 @@
 		});
 	});
 
-	// Fetch Twitter profile picture
-	async function fetchTwitterPfp(handle: string): Promise<string | null> {
-		const cleanHandle = cleanTwitterHandle(handle);
-		if (pfpCache[cleanHandle]) return pfpCache[cleanHandle];
-		if (pfpLoading[cleanHandle]) return null;
-
-		pfpLoading[cleanHandle] = true;
-		try {
-			const response = await fetch(`https://unavatar.io/twitter/${cleanHandle}`);
-			if (response.ok) {
-				const url = `https://unavatar.io/twitter/${cleanHandle}`;
-				pfpCache[cleanHandle] = url;
-				pfpCache = { ...pfpCache };
-				return url;
-			}
-		} catch (error) {
-			console.error('Error fetching pfp:', error);
-		} finally {
-			pfpLoading[cleanHandle] = false;
-			pfpLoading = { ...pfpLoading };
-		}
-		return null;
+	// Get Twitter profile picture URL
+	function getTwitterPfp(handle: string | null): string | null {
+		if (!handle) return null;
+		return `https://unavatar.io/twitter/${cleanTwitterHandle(handle)}`;
 	}
-
-	// Load pfp for enemies with twitter handles on mount
-	$effect(() => {
-		if (browser) {
-			data.enemies.forEach((enemy) => {
-				if (enemy.twitter_handle) {
-					fetchTwitterPfp(enemy.twitter_handle);
-				}
-			});
-		}
-	});
 
 	// Check for local data on mount
 	$effect(() => {
@@ -349,7 +384,10 @@
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label for="twitter_handle" class="label">Twitter/X Handle (optional)</label>
+							<label for="twitter_handle" class="label">
+								<Twitter size={14} />
+								Twitter/X Handle (optional)
+							</label>
 							<input 
 								type="text" 
 								id="twitter_handle" 
@@ -368,6 +406,17 @@
 								placeholder="https://x.com/..."
 							/>
 						</div>
+					</div>
+					<div class="form-group form-group-full">
+						<label for="reason" class="label">Why do you hate them? (optional)</label>
+						<textarea 
+							id="reason" 
+							name="reason"
+							class="input input-textarea" 
+							placeholder="What did they do? Document their offense..."
+							rows="2"
+						></textarea>
+						<p class="form-hint">This will be added as your first grievance</p>
 					</div>
 					<div class="form-actions">
 						<button type="button" class="btn btn-ghost" onclick={() => showAddForm = false}>
@@ -409,7 +458,7 @@
 			<div class="enemy-list">
 				{#each filteredEnemies() as enemy (enemy.id)}
 					{@const isExpanded = expandedEnemyId === enemy.id}
-					{@const twitterPfp = enemy.twitter_handle ? pfpCache[cleanTwitterHandle(enemy.twitter_handle)] : null}
+					{@const pfpUrl = getTwitterPfp(enemy.twitter_handle)}
 					<div class="enemy-card" class:expanded={isExpanded}>
 						<button 
 							class="enemy-header"
@@ -417,17 +466,24 @@
 							aria-expanded={isExpanded}
 						>
 							<div class="enemy-info">
-								{#if twitterPfp}
+								{#if pfpUrl}
 									<img 
-										src={twitterPfp} 
-										alt={enemy.name} 
+										src={pfpUrl} 
+										alt="{enemy.name}'s avatar"
 										class="enemy-avatar-img"
-										onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
+										onerror={(e) => {
+											(e.target as HTMLImageElement).style.display = 'none';
+											(e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+										}}
 									/>
+									<div class="enemy-avatar hidden">
+										{enemy.name.charAt(0).toUpperCase()}
+									</div>
+								{:else}
+									<div class="enemy-avatar">
+										{enemy.name.charAt(0).toUpperCase()}
+									</div>
 								{/if}
-								<div class="enemy-avatar" class:hidden={!!twitterPfp}>
-									{enemy.name.charAt(0).toUpperCase()}
-								</div>
 								<div class="enemy-details">
 									<h3 class="enemy-name">{enemy.name}</h3>
 									{#if enemy.nickname}
@@ -461,6 +517,25 @@
 
 						{#if isExpanded}
 							<div class="enemy-expanded animate-in">
+								<!-- Tweet Embed -->
+								{#if enemy.tweet_url}
+									{@const tweetId = extractTweetId(enemy.tweet_url)}
+									{#if tweetId}
+										<div class="tweet-embed">
+											<div id="tweet-{enemy.id}" class="tweet-container">
+												<div class="tweet-loading">
+													<span class="spinner-small"></span>
+													<span>Loading tweet...</span>
+												</div>
+											</div>
+											<a href={enemy.tweet_url} target="_blank" rel="noopener" class="tweet-link">
+												<ExternalLink size={14} />
+												View on Twitter
+											</a>
+										</div>
+									{/if}
+								{/if}
+
 								<!-- Grievances List -->
 								<div class="grievances-section">
 									<h4>Why they're on the list:</h4>
@@ -561,7 +636,7 @@
 			>
 				{#each filteredEnemies() as enemy (enemy.id)}
 					{@const pos = stickyPositions[enemy.id] || { x: 0, y: 0 }}
-					{@const twitterPfp = enemy.twitter_handle ? pfpCache[cleanTwitterHandle(enemy.twitter_handle)] : null}
+					{@const pfpUrl = getTwitterPfp(enemy.twitter_handle)}
 					{@const isSelected = selectedStickyId === enemy.id}
 					<div 
 						class="sticky-note"
@@ -573,10 +648,10 @@
 						tabindex="0"
 					>
 						<div class="sticky-header">
-							{#if twitterPfp}
+							{#if pfpUrl}
 								<img 
-									src={twitterPfp} 
-									alt={enemy.name} 
+									src={pfpUrl} 
+									alt="{enemy.name}'s avatar" 
 									class="sticky-avatar-img"
 									onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
 								/>
@@ -838,10 +913,81 @@
 		flex-direction: column;
 	}
 
+	.form-group-full {
+		grid-column: 1 / -1;
+	}
+
+	.form-group .label {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.input-textarea {
+		resize: vertical;
+		min-height: 60px;
+		font-family: inherit;
+		line-height: 1.5;
+	}
+
+	.form-hint {
+		margin-top: 0.375rem;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
 	.form-actions {
 		display: flex;
 		justify-content: flex-end;
 		gap: 0.75rem;
+	}
+
+	/* Tweet embed */
+	.tweet-embed {
+		margin-bottom: 1rem;
+		padding: 1rem;
+		background: var(--bg-card);
+		border-radius: 8px;
+		border: 1px solid var(--border);
+		overflow: hidden;
+	}
+
+	.tweet-container {
+		min-height: 100px;
+	}
+
+	.tweet-container :global(.twitter-tweet) {
+		margin: 0 !important;
+	}
+
+	.tweet-container :global(iframe) {
+		max-width: 100% !important;
+	}
+
+	.tweet-loading {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		color: var(--text-muted);
+		font-size: 0.875rem;
+		padding: 2rem 1rem;
+	}
+
+	.tweet-error {
+		color: var(--error);
+		font-size: 0.875rem;
+		text-align: center;
+		padding: 1rem;
+	}
+
+	.tweet-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.8125rem;
+		color: #1da1f2;
+		margin-top: 0.5rem;
 	}
 
 	/* Empty State */
@@ -974,14 +1120,13 @@
 		align-items: center;
 		gap: 0.25rem;
 		font-size: 0.75rem;
-		color: var(--text-muted);
+		color: #1da1f2;
 		text-decoration: none;
 		margin-top: 0.25rem;
-		transition: color 0.15s ease;
 	}
 
 	.twitter-link:hover {
-		color: #1da1f2;
+		text-decoration: underline;
 	}
 
 	.enemy-meta {
@@ -1312,6 +1457,18 @@
 
 		.form-row {
 			grid-template-columns: 1fr;
+		}
+
+		.form-group-full {
+			grid-column: 1;
+		}
+
+		.input-textarea {
+			min-height: 80px;
+		}
+
+		.tweet-embed {
+			padding: 0.75rem;
 		}
 
 		.sync-banner {

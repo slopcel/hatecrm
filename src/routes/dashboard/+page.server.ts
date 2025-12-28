@@ -48,22 +48,37 @@ export const actions: Actions = {
 		const nickname = formData.get('nickname')?.toString().trim() || null;
 		const twitter_handle = formData.get('twitter_handle')?.toString().trim() || null;
 		const tweet_url = formData.get('tweet_url')?.toString().trim() || null;
+		const reason = formData.get('reason')?.toString().trim() || null;
 
 		if (!name) {
 			return fail(400, { message: 'Name is required', action: 'addEnemy' });
 		}
 
-		const { error } = await locals.supabase.from('enemies').insert({
+		const { data: enemy, error } = await locals.supabase.from('enemies').insert({
 			user_id: user.id,
 			name,
 			nickname,
 			twitter_handle,
 			tweet_url
-		});
+		}).select().single();
 
 		if (error) {
 			console.error('Error adding enemy:', error);
 			return fail(500, { message: 'Failed to add to the list', action: 'addEnemy' });
+		}
+
+		// If a reason was provided, add it as the first grievance
+		if (reason && enemy) {
+			const { error: grievanceError } = await locals.supabase.from('grievances').insert({
+				enemy_id: enemy.id,
+				reason,
+				tweet_url // Use the same tweet URL for the grievance
+			});
+
+			if (grievanceError) {
+				console.error('Error adding initial grievance:', grievanceError);
+				// Don't fail the whole operation, enemy was still created
+			}
 		}
 
 		return { success: true, action: 'addEnemy' };

@@ -48,8 +48,75 @@
 	let newNickname = $state('');
 	let newTwitterHandle = $state('');
 	let newTweetUrl = $state('');
+	let newReason = $state('');
 	let grievanceInputs = $state<Record<string, string>>({});
 	let grievanceTweetUrls = $state<Record<string, string>>({});
+	
+	// Twitter widget loading
+	let twitterScriptLoaded = $state(false);
+	
+	// Load Twitter widgets script
+	$effect(() => {
+		if (browser && !twitterScriptLoaded) {
+			const existingScript = document.querySelector('script[src*="platform.twitter.com/widgets.js"]');
+			if (existingScript) {
+				twitterScriptLoaded = true;
+			} else {
+				const script = document.createElement('script');
+				script.src = 'https://platform.twitter.com/widgets.js';
+				script.async = true;
+				script.charset = 'utf-8';
+				script.onload = () => {
+					twitterScriptLoaded = true;
+				};
+				document.body.appendChild(script);
+			}
+		}
+	});
+	
+	// Function to embed a tweet using createTweet API
+	async function embedTweet(tweetId: string, containerId: string) {
+		if (!browser || !twitterScriptLoaded) return;
+		
+		const container = document.getElementById(containerId);
+		if (!container) return;
+		
+		// Check if tweet is already embedded (has an iframe)
+		if (container.querySelector('iframe')) return;
+		
+		// Clear container and show loading state is gone
+		container.innerHTML = '';
+		
+		try {
+			const twttr = (window as any).twttr;
+			if (twttr?.widgets?.createTweet) {
+				await twttr.widgets.createTweet(tweetId, container, {
+					theme: 'light',
+					dnt: true
+				});
+			}
+		} catch (error) {
+			console.error('Failed to embed tweet:', error);
+			container.innerHTML = '<p class="tweet-error">Failed to load tweet</p>';
+		}
+	}
+	
+	// Embed tweet when expanded enemy changes
+	$effect(() => {
+		if (browser && expandedEnemyId && twitterScriptLoaded) {
+			const enemy = enemies.find(e => e.id === expandedEnemyId);
+			if (enemy?.tweet_url) {
+				const tweetId = extractTweetId(enemy.tweet_url);
+				if (tweetId) {
+					const containerId = `tweet-${enemy.id}`;
+					// Small delay to ensure DOM is updated
+					setTimeout(() => {
+						embedTweet(tweetId, containerId);
+					}, 150);
+				}
+			}
+		}
+	});
 
 	// Dragging state for whiteboard
 	let draggingId = $state<string | null>(null);
@@ -137,12 +204,18 @@
 		}
 
 		addingEnemy = true;
-		addEnemy(
+		const enemy = addEnemy(
 			newName.trim(), 
 			newNickname.trim() || null,
 			newTwitterHandle.trim() ? cleanTwitterHandle(newTwitterHandle) : null,
 			newTweetUrl.trim() || null
 		);
+		
+		// If a reason was provided, add it as a grievance
+		if (newReason.trim()) {
+			addGrievance(enemy.id, newReason.trim(), newTweetUrl.trim() || null);
+		}
+		
 		refreshEnemies();
 		toast.success('Added to the list. They earned it.');
 		
@@ -151,6 +224,7 @@
 		newNickname = '';
 		newTwitterHandle = '';
 		newTweetUrl = '';
+		newReason = '';
 		showAddForm = false;
 		addingEnemy = false;
 	}
@@ -387,6 +461,17 @@
 							/>
 						</div>
 					</div>
+					<div class="form-group form-group-full">
+						<label for="reason" class="label">Why do you hate them? (optional)</label>
+						<textarea 
+							id="reason" 
+							class="input input-textarea" 
+							placeholder="What did they do? Document their offense..."
+							bind:value={newReason}
+							rows="2"
+						></textarea>
+						<p class="form-hint">This will be added as your first grievance</p>
+					</div>
 					<div class="form-actions">
 						<button type="button" class="btn btn-ghost" onclick={() => showAddForm = false}>
 							Cancel
@@ -489,9 +574,12 @@
 										{@const tweetId = extractTweetId(enemy.tweet_url)}
 										{#if tweetId}
 											<div class="tweet-embed">
-												<blockquote class="twitter-tweet" data-theme="light">
-													<a href={enemy.tweet_url}>Loading tweet...</a>
-												</blockquote>
+												<div id="tweet-{enemy.id}" class="tweet-container">
+													<div class="tweet-loading">
+														<span class="spinner-small"></span>
+														<span>Loading tweet...</span>
+													</div>
+												</div>
 												<a href={enemy.tweet_url} target="_blank" rel="noopener" class="tweet-link">
 													<ExternalLink size={14} />
 													View on Twitter
@@ -864,6 +952,23 @@
 		gap: 0.375rem;
 	}
 
+	.form-group-full {
+		grid-column: 1 / -1;
+	}
+
+	.input-textarea {
+		resize: vertical;
+		min-height: 60px;
+		font-family: inherit;
+		line-height: 1.5;
+	}
+
+	.form-hint {
+		margin-top: 0.375rem;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
 	.form-actions {
 		display: flex;
 		justify-content: flex-end;
@@ -891,6 +996,36 @@
 		background: var(--bg-card);
 		border-radius: 8px;
 		border: 1px solid var(--border);
+		overflow: hidden;
+	}
+
+	.tweet-container {
+		min-height: 100px;
+	}
+
+	.tweet-container :global(.twitter-tweet) {
+		margin: 0 !important;
+	}
+
+	.tweet-container :global(iframe) {
+		max-width: 100% !important;
+	}
+
+	.tweet-loading {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		color: var(--text-muted);
+		font-size: 0.875rem;
+		padding: 2rem 1rem;
+	}
+
+	.tweet-error {
+		color: var(--error);
+		font-size: 0.875rem;
+		text-align: center;
+		padding: 1rem;
 	}
 
 	.tweet-link {
@@ -1394,12 +1529,24 @@
 			grid-template-columns: 1fr;
 		}
 
+		.form-group-full {
+			grid-column: 1;
+		}
+
+		.input-textarea {
+			min-height: 80px;
+		}
+
 		.form-actions {
 			flex-direction: column;
 		}
 
 		.form-actions .btn {
 			width: 100%;
+		}
+
+		.tweet-embed {
+			padding: 0.75rem;
 		}
 
 		.enemy-header {
